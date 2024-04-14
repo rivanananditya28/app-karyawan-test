@@ -35,6 +35,14 @@
                 <a href="tambah_karyawan.php" class="btn btn-primary my-3">Tambah Karyawan</a> <a href="index_2.php" class="btn btn-primary my-3">Tanpa AJAX</a>
                 <div class="row mt-3">
                     <div class="col-12">
+                        <!-- notifikasi -->
+                        <?php
+                        session_start();
+                        if (isset($_SESSION['message'])) {
+                            echo $_SESSION['message'];
+                            unset($_SESSION['message']);
+                        }
+                        ?>
                         <div class="table-responsive">
                             <center>
                                 <table id="karyawanTable" class="table" style="width: 100%;">

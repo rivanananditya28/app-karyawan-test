@@ -163,8 +163,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 // $result = mysqli_query($conn, $query);
 
                 // Redirect ke halaman lain setelah proses selesai
-                echo '<div class="alert alert-success alert-dismissible fade in" role="alert"></div><script> window.location.href = "index.php"; </script>';
-                // header("Location: index.php");
+                // echo '<div class="alert alert-success alert-dismissible fade in" role="alert"></div><script> window.location.href = "index.php"; </script>';
+                session_start();
+                // ketika di framework sudah ada fitur flash data message (session)
+                // alert hanya muncul sekali ketika di refresh halaman alertnya hilang, tetapi kalau di php native belum ada fitur tersebut (buat sendiri)
+                $_SESSION['message'] = '<div class="alert alert-primary" role="alert">Berhasil disimpan!</div>';
+                header("Location: index.php");
                 exit();
             } else {
                 if (strpos($conn->error, "Duplicate entry") !== false) {
