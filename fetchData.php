@@ -43,10 +43,9 @@ $query = "SELECT a.*, b.nama_gelar,
     INNER JOIN gelar b ON a.gelar = b.id";
 
 // Tambahkan filter jika tanggal disediakan
-if (isset($_POST['tanggal']) || $_POST['tanggal'] != '') {
-    $tanggal = date('Y-m-d', strtotime($_POST['tanggal']));
+if (isset($_GET['tanggal']) && $_GET['tanggal'] != '') {
+    $tanggal = date('Y-m-d', strtotime($_GET['tanggal']));
     $query .= " WHERE (tanggal_masuk <= '$tanggal' AND (tanggal_keluar > '$tanggal' OR tanggal_keluar IS NULL))";
-    var_dump( $_POST['tanggal']);
 }
 
 // Tambahkan paginasi ke dalam query
@@ -79,12 +78,10 @@ while ($row = mysqli_fetch_assoc($sql_data)) {
 
 // Mengembalikan data dalam format JSON
 header('Content-Type: application/json');
-// var_dump($data);
 echo json_encode(array(
     'draw' => isset($_POST['draw']) ? intval($_POST['draw']) : 1,
     'recordsTotal' => intval($total_count),
     'recordsFiltered' => intval($filtered_count),
     'data' => $data
 ));
-die();
 ?>

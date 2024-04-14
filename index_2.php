@@ -32,7 +32,7 @@
                         </div>
                     </div>
                 </div>
-                <a href="tambah_karyawan.php" class="btn btn-primary my-3">Tambah Karyawan</a> <a href="index_2.php" class="btn btn-primary my-3">Tanpa AJAX</a>
+                <a href="tambah_karyawan.php" class="btn btn-primary my-3">Tambah Karyawan</a> 
                 <div class="row mt-3">
                     <div class="col-12">
                         <div class="table-responsive">
@@ -55,6 +55,66 @@
                                         </tr>
                                     </thead>
                                     <tbody>
+                                    <?php
+                                        // Lakukan koneksi ke database atau ambil data dari mana pun yang diperlukan
+                                        // Misalnya, kita akan mengasumsikan koneksi ke database telah dibuat sebelumnya
+                                        $servername = "localhost";
+                                        $username = "root";
+                                        $password = "";
+                                        $dbname = "db_karyawan";
+
+                                        // Membuat koneksi
+                                        $conn = new mysqli($servername, $username, $password, $dbname);
+
+                                        if ($conn->connect_error) {
+                                            die("Connection failed: " . $conn->connect_error);
+                                        }
+
+                                        // Buat query untuk mengambil data dari database
+                                        $query = "SELECT a.*, b.nama_gelar, 
+                                                    CASE 
+                                                    WHEN a.jenis_kelamin = 'l' THEN 'Laki - Laki'  
+                                                    WHEN a.jenis_kelamin = 'p' THEN 'Perempuan'  
+                                                    ELSE ''  
+                                                    END AS jenis_kelamin_label 
+                                                    FROM karyawan a 
+                                                    INNER JOIN gelar b ON a.gelar = b.id";
+
+                                        // Tambahkan filter jika tanggal disediakan
+                                        if (isset($_GET['tanggal']) && $_GET['tanggal'] != '') {
+                                            $tanggal = date('Y-m-d', strtotime($_GET['tanggal']));
+                                            $query .= " WHERE (tanggal_masuk <= '$tanggal' AND (tanggal_keluar > '$tanggal' OR tanggal_keluar IS NULL))";
+                                        }
+
+                                        // Eksekusi query dan ambil data
+                                        $sql_data = mysqli_query($conn, $query);
+
+                                        // Ambil data hasil query
+                                        while ($row = mysqli_fetch_assoc($sql_data)) {
+
+                                        ?>
+
+                                            <tr>
+                                                <td><?php echo $row['nik']; ?></td>
+                                                <td><?php echo $row['tanggal_masuk']; ?></td>
+                                                <td><?php echo $row['nama']; ?></td>
+                                                <td><?php echo $row['jenis_kelamin_label']; ?></td>
+                                                <td><?php echo $row['alamat']; ?></td>
+                                                <td><?php echo $row['kota']; ?></td>
+                                                <td><?php echo $row['nama_gelar']; ?></td>
+                                                <td><?php echo $row['tanggal_keluar']; ?></td>
+                                                <td>APA YA</td>
+                                                <td>
+                                                    <center>
+                                                        <a href="edit_karyawan.php?nik=<?php echo $row['nik']; ?>" class="btn btn-warning">Edit</a>
+                                                        <a href="hapus_karyawan.php?nik=<?php echo $row['nik']; ?>" class="btn btn-danger">Hapus</a>
+                                                    </center>
+                                                </td>
+                                            </tr>
+
+                                        <?php
+                                        }
+                                        ?>
 
                                     </tbody>
                                 </table>
@@ -223,124 +283,21 @@
     <script type="text/javascript">
         var table;
         $(document).ready(function() {
-                    // Initialize datepicker
-                    $(".datepicker").datepicker({
-                        format: 'dd-mm-yyyy',
-                        autoclose: true,
-                        todayHighlight: true,
-                    });
+            // Initialize datepicker
+            $(".datepicker").datepicker({
+                format: 'dd-mm-yyyy',
+                autoclose: true,
+                todayHighlight: true,
+            });
 
-                    // Initialize DataTable
-                    table = new DataTable('#karyawanTable', {
-                        processing: true,
-                        serverSide: true,
-                        searching: false,
-                        responsive: true,
-                        ajax: {
-                            url: 'fetchData.php',
-                            method: 'GET',
-                            data: function(d) {
-                                d.tanggal = $('#tanggal').val();
-                            },
-                        },
-                        columnDefs: [{
-                                "searchable": false,
-                                "orderable": true,
-                                "targets": 8, // Adjust the index according to your data structure
-                                "render": function(data, type, row) {
-                                    var today = new Date().toISOString().split('T')[0];
-                                    // Ubah status 
-                                    var status = (today >= row[1] && (row[7] == null || today <= row[7])) ? '<span class="badge bg-success">Aktif</span>' : '<span class="badge bg-danger">Tidak Aktif</span>';
-                                    return status;
-                                }
-                            },
-                            {
-                                "searchable": false,
-                                "orderable": false,
-                                "targets": 9,
-                                // "render": function(data, type, row) {
-                                //     var btn = "<center><a href=\"tambah_karyawan.php?id=" + data + "\" class=\"btn btn-warning btn-sm\">Edit</a> <a href=\"delete.php?id=" + data + "\" class=\"btn btn-danger btn-sm\">Hapus</a></center>";
-                                //     return btn;
-                                // }
-                                "render": function(data, type, row) {
-                                    var today = new Date().toISOString().split('T')[0]; // Get current date in yyyy-mm-dd format
-                                    var editBtn = "<a href=\"tambah_karyawan.php?id=" + row[0] + "\" class=\"btn btn-warning btn-sm\">Edit</a>";
-                                    var deleteBtn = "<button class=\"btn btn-danger btn-sm\" onclick=\"confirmDelete(" + row[0] + ")\">Hapus</button>";
+            // Initialize DataTable
+            table = new DataTable('#karyawanTable', {});
+        });
 
-                                    // Check if karyawan is still active
-                                    if (today >= row[1] && (row[7] == null || today <= row[7])) {
-                                        return "<center>" + editBtn + " " + deleteBtn + "</center>";
-                                    } else {
-                                        return "<center><td></td></center>"; // Show only edit button if karyawan is not active
-                                    }
-                                }
-                            },
-                        ]
-                    });
-
-                });
-
-
-                function confirmDelete(id) {
-                    if (confirm("Apakah Anda yakin ingin menghapus karyawan ini?")) {
-                        window.location.href = "delete.php?id=" + id;
-                    } else {
-                        return false;
-                    }
-                }
-
-                function changeDate() {
-                    // note : harusnya bagian ini bisa menggunakan table.ajax.reload() saja, tetapi karena ada bug di DataTables saat menggunakan serverSide processing, maka harus destroy dan reinitialize table
-                    // destroy the table and reinitialize it
-                    table.destroy();
-
-                    table = new DataTable('#karyawanTable', {
-                        processing: true,
-                        serverSide: true,
-                        searching: false,
-                        responsive: true,
-                        ajax: {
-                            url: 'fetchData.php',
-                            method: 'GET',
-                            data: function(d) {
-                                d.tanggal = $('#tanggal').val();
-                            },
-                        },
-                        columnDefs: [{
-                                "searchable": false,
-                                "orderable": true,
-                                "targets": 8, // Adjust the index according to your data structure
-                                "render": function(data, type, row) {
-                                    var today = new Date().toISOString().split('T')[0];
-                                    // Ubah status 
-                                    var status = (today >= row[1] && (row[7] == null || today <= row[7])) ? '<span class="badge bg-success">Aktif</span>' : '<span class="badge bg-danger">Tidak Aktif</span>';
-                                    return status;
-                                }
-                            },
-                            {
-                                "searchable": false,
-                                "orderable": false,
-                                "targets": 9,
-                                // "render": function(data, type, row) {
-                                //     var btn = "<center><a href=\"tambah_karyawan.php?id=" + data + "\" class=\"btn btn-warning btn-sm\">Edit</a> <a href=\"delete.php?id=" + data + "\" class=\"btn btn-danger btn-sm\">Hapus</a></center>";
-                                //     return btn;
-                                // }
-                                "render": function(data, type, row) {
-                                    var today = new Date().toISOString().split('T')[0]; // Get current date in yyyy-mm-dd format
-                                    var editBtn = "<a href=\"tambah_karyawan.php?id=" + row[0] + "\" class=\"btn btn-warning btn-sm\">Edit</a>";
-                                    var deleteBtn = "<button class=\"btn btn-danger btn-sm\" onclick=\"confirmDelete(" + row[0] + ")\">Hapus</button>";
-
-                                    // Check if karyawan is still active
-                                    if (today >= row[1] && (row[7] == null || today <= row[7])) {
-                                        return "<center>" + editBtn + " " + deleteBtn + "</center>";
-                                    } else {
-                                        return "<center><td></td></center>"; // Show only edit button if karyawan is not active
-                                    }
-                                }
-                            },
-                        ]
-                    });
-                }
+        function changeDate() {
+            var tanggal = $('#tanggal').val();
+            window.location.href = 'index_2.php?tanggal=' + tanggal;
+        }
 
     </script>
 </body>
